@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Bot</title>
+</head>
+<body>
+    <div id="chat-container">
+        <!-- Chat messages will be displayed here -->
+    </div>
+    <div>
+        <input type="text" id="user-input" placeholder="Type your message...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        const endpointUrl = 'https://api.openai.com/v1/chat/completions';
+        const apiKey = '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';
+
+        const initialMessages = [
+            {
+                role: 'system',
+                content: 'you are a python instructor'
+            },
+            {
+                role: 'user',
+                content: 'provide me with a plan to study python'
+            }
+        ];
+
+        let messages = [...initialMessages];
+
+        function appendMessage(role, content) {
+            const chatContainer = document.getElementById('chat-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', role);
+            messageDiv.innerText = content;
+            chatContainer.appendChild(messageDiv);
+        }
+
+        function sendMessage() {
+            const userInput = document.getElementById('user-input');
+            const userMessage = userInput.value.trim();
+
+            if (userMessage === '') {
+                return;
+            }
+
+            appendMessage('user', userMessage);
+            userInput.value = '';
+
+            // Make API request to OpenAI
+            fetch(endpointUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: 'gpt-3.5-turbo',
+                    messages: messages
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const botMessage = data.choices[0].message.content;
+                appendMessage('assistant', botMessage);
+                messages.push({ role: 'assistant', content: botMessage });
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Initial message display
+        initialMessages.forEach(message => {
+            appendMessage(message.role, message.content);
+        });
+    </script>
+</body>
+</html>
